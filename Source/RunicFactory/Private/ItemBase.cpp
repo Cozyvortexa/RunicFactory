@@ -3,10 +3,6 @@
 
 #include "ItemBase.h"
 
-UItemBase::UItemBase()
-{
-}
-
-void UItemBase::Use()
-{
-}
+//UItemBase::UItemBase()
+//{
+//}

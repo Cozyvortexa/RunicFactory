@@ -3,6 +3,8 @@
 
 #include "ABeltConveyor.h"
 
+static constexpr float ItemSpacing = 118.6f;
+
 // Sets default values
 AABeltConveyor::AABeltConveyor()
 {
@@ -26,11 +28,12 @@ void AABeltConveyor::Tick(float DeltaTime)
 
 }
 
-void AABeltConveyor::AddItemOnBelt(UStaticMesh* mesh)
+int64 AABeltConveyor::AddItemOnBelt(UStaticMesh* mesh)
 {
 	int64 itemID = itemManager->AddItem(mesh, GetActorTransform());
 	FBeltItem currentItem(mesh, itemID, 0);
 	itemsOnBelt.Add(currentItem);
+    return itemID;
 }
 
 
@@ -38,28 +41,64 @@ void AABeltConveyor::MoveItemsOnBelt(float deltaTime)
 {
 	float splineLength = BeltSpline->GetSplineLength();
 	float distanceToAdd = deltaTime * speed;
-	TArray<int32> indexToRemove;
 
+    TArray<int32> SortedIndices;
+    SortedIndices.Reserve(itemsOnBelt.Num());
+
+    for (int32 i = 0; i < itemsOnBelt.Num(); ++i)
+    {
+        SortedIndices.Add(i);
+    }
+
+    SortedIndices.Sort([this](int32 A, int32 B) { return itemsOnBelt[A].distance < itemsOnBelt[B].distance; });
 
     for (int32 i = 0; i < itemsOnBelt.Num(); i++)
     {
-        itemsOnBelt[i].distance += distanceToAdd;
+        int32 currentIndex = SortedIndices[i];
 
-        if (itemsOnBelt[i].distance >= splineLength)
+        if (i + 1 < itemsOnBelt.Num())
         {
-            indexToRemove.Add(i);
+            int32 forwardIndex = SortedIndices[i + 1];
+            float forwardItemDistance = itemsOnBelt[forwardIndex].distance;
+            float distanceEstimation = itemsOnBelt[currentIndex].distance + distanceToAdd;
+
+            // S'il y a un item devant lui
+            if (distanceEstimation + ItemSpacing > forwardItemDistance)
+            {
+                itemsOnBelt[currentIndex].distance = FMath::Max(itemsOnBelt[currentIndex].distance, forwardItemDistance - ItemSpacing);
+
+                FTransform transform = BeltSpline->GetTransformAtDistanceAlongSpline(itemsOnBelt[currentIndex].distance, ESplineCoordinateSpace::World);
+                itemManager->MoveItem(itemsOnBelt[currentIndex].mesh, itemsOnBelt[currentIndex].itemID, transform);
+                continue;
+            }
+            itemsOnBelt[currentIndex].distance = distanceEstimation;
+        }
+        else if (itemsOnBelt[currentIndex].distance >= splineLength)
+        {
+            itemToAchieveTheEnd = itemsOnBelt[currentIndex].itemID;
+            continue;
         }
         else
         {
-            FTransform transform = BeltSpline->GetTransformAtDistanceAlongSpline(
-                itemsOnBelt[i].distance, ESplineCoordinateSpace::World);
-            itemManager->MoveItem(itemsOnBelt[i].mesh, itemsOnBelt[i].itemID, transform);
+            //Last item
+            itemsOnBelt[currentIndex].distance += distanceToAdd;
         }
+
+        FTransform transform = BeltSpline->GetTransformAtDistanceAlongSpline(itemsOnBelt[currentIndex].distance, ESplineCoordinateSpace::World);
+        itemManager->MoveItem(itemsOnBelt[currentIndex].mesh, itemsOnBelt[currentIndex].itemID, transform);
     }
-
-
-
-	for (int64 index : indexToRemove)
-		itemManager->RemoveItem(itemsOnBelt[index].mesh, itemsOnBelt[index].itemID);
 }
 
+void AABeltConveyor::RemoveItemFromBelt(int32 index) {
+    itemManager->RemoveItem(itemsOnBelt[index].mesh, itemsOnBelt[index].itemID);
+}
+
+
+void AABeltConveyor::ReceiveItem(FBeltItem&& item) {
+    itemsOnBelt.Add(MoveTemp(item));
+}
+
+void AABeltConveyor::TransferItem(AABeltConveyor* receiver, int64 index) {
+    receiver->ReceiveItem(MoveTemp(itemsOnBelt[index]));
+    itemsOnBelt.RemoveAtSwap(index);
+}

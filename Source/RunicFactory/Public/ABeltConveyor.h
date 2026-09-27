@@ -9,6 +9,15 @@
 #include "ItemManager.h"
 #include "ABeltConveyor.generated.h"
 
+
+struct FBeltItem {
+	FBeltItem() {}
+	FBeltItem(UStaticMesh* mesh, int64 itemID, float distance) : mesh(mesh), itemID(itemID), distance(distance) {}
+	int64 itemID;
+	float distance;
+	UStaticMesh* mesh;
+};
+
 UCLASS()
 class RUNICFACTORY_API AABeltConveyor : public AActor
 {
@@ -19,11 +28,20 @@ public:
 	AABeltConveyor();
 
 	UFUNCTION(BlueprintCallable, Category = "Belt")
-	void AddItemOnBelt(UStaticMesh* mesh);
+	int64 AddItemOnBelt(UStaticMesh* mesh);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Belt")
 	void MoveItemsOnBelt(float deltaTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Belt")
+	void RemoveItemFromBelt(int32 index);
+
+
+	UFUNCTION(BlueprintCallable, Category = "Belt")
+	void TransferItem(AABeltConveyor* receiver, int64 index);
+
+	void ReceiveItem(FBeltItem&& item);
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -41,13 +59,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UItemManager* itemManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int64 itemToAchieveTheEnd;
+
 private: 
-	struct FBeltItem{
-		FBeltItem() {}
-		FBeltItem(UStaticMesh* mesh, int64 itemID, float distance) : mesh(mesh), itemID(itemID), distance(distance) {}
-		int64 itemID;
-		float distance;
-		UStaticMesh* mesh;
-	};
 	TArray<FBeltItem> itemsOnBelt;
 };

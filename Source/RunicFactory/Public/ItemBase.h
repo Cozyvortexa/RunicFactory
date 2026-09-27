@@ -4,25 +4,47 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Engine/Texture2D.h"
 #include "ItemBase.generated.h"
+
+UENUM(BlueprintType)
+enum class E_Item_Type : uint8
+{
+    Default,
+    Ressource,
+    Building
+};
 
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable)
-class RUNICFACTORY_API UItemBase : public UObject
+USTRUCT(BlueprintType)
+struct FItemBase : public FTableRowBase
 {
     GENERATED_BODY()
 
 public:
-    UItemBase();
+    FItemBase()
+        : MaxStackSize(1)
+        , ItemType(E_Item_Type::Default)
+        , Icone(nullptr)
+        , mesh(nullptr)
+    {
+    }
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
     FString ItemName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
-    int32 StackSize;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    int32 MaxStackSize;
 
-    UFUNCTION(BlueprintCallable, Category = "Item")
-    void Use();
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    TObjectPtr<UTexture2D> Icone;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+    E_Item_Type ItemType;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    UStaticMesh* mesh;
 };
