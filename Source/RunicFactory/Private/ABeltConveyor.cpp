@@ -28,13 +28,52 @@ void AABeltConveyor::Tick(float DeltaTime)
 
 }
 
-int64 AABeltConveyor::AddItemOnBelt(UStaticMesh* mesh)
+bool AABeltConveyor::AddItemOnBelt(const FItemBase& item)
 {
-	int64 itemID = itemManager->AddItem(mesh, GetActorTransform());
-	FBeltItem currentItem(mesh, itemID, 0);
+    if (itemsOnBelt.Num() >= MaxItemNbrOnBelt)
+        return false;
+
+
+	int64 itemID = itemManager->AddItem(item.mesh, GetActorTransform());
+	FBeltItem currentItem(item.mesh, itemID, 0);
 	itemsOnBelt.Add(currentItem);
-    return itemID;
+
+
+    ItemIndexToItem.Add(itemID, item);
+    return true;
 }
+
+
+void AABeltConveyor::RemoveItemFromBelt(int32 itemIndex) {
+    int64 itemID = itemsOnBelt[itemIndex].itemID;
+    ItemIndexToItem.Remove(itemID);
+    itemManager->RemoveItem(itemsOnBelt[itemIndex].mesh, itemsOnBelt[itemIndex].itemID);
+    itemsOnBelt.RemoveAtSwap(itemIndex);
+}
+
+
+bool AABeltConveyor::GetItemFromBelt(int32 itemIndex, FItemBase& outItem) {
+    if (itemIndex < 0 || itemIndex > itemsOnBelt.Num() - 1)
+        return false;
+
+    FItemBase* Found = ItemIndexToItem.Find(itemsOnBelt[itemIndex].itemID);
+    if (!Found)
+        return false;
+
+
+    outItem = *Found;
+    return true;
+}
+
+
+//bool AABeltConveyor::GetAndRemoveItemFromBelt(int32 itemIndex, FItemBase& outItem) {
+//    if (!GetItemFromBelt(itemIndex, outItem))
+//        return false;
+//
+//    RemoveItemFromBelt(itemIndex);
+//
+//    return true;
+//}
 
 
 void AABeltConveyor::MoveItemsOnBelt(float deltaTime)
@@ -75,7 +114,7 @@ void AABeltConveyor::MoveItemsOnBelt(float deltaTime)
         }
         else if (itemsOnBelt[currentIndex].distance >= splineLength)
         {
-            itemToAchieveTheEnd = itemsOnBelt[currentIndex].itemID;
+            itemIndexToAchieveTheEnd = currentIndex;
             continue;
         }
         else
@@ -89,16 +128,29 @@ void AABeltConveyor::MoveItemsOnBelt(float deltaTime)
     }
 }
 
-void AABeltConveyor::RemoveItemFromBelt(int32 index) {
-    itemManager->RemoveItem(itemsOnBelt[index].mesh, itemsOnBelt[index].itemID);
+
+//Transfert to a another Belt
+bool AABeltConveyor::ReceiveItem(FBeltItem&& beltItem, FItemBase&& item) {
+    if (itemsOnBelt.Num() >= MaxItemNbrOnBelt) //To many items, declined the item
+        return false;
+
+
+    itemsOnBelt.Add(MoveTemp(beltItem));
+    ItemIndexToItem.Add(beltItem.itemID, MoveTemp(item));
+    return true;
 }
 
+bool AABeltConveyor::TransferItem(AABeltConveyor* receiver, int32 itemIndex) {
+    if (itemIndex < 0 || itemsOnBelt.Num() < itemIndex)
+        return false;
 
-void AABeltConveyor::ReceiveItem(FBeltItem&& item) {
-    itemsOnBelt.Add(MoveTemp(item));
-}
+    int64 itemID = itemsOnBelt[itemIndex].itemID;
+    bool result = receiver->ReceiveItem(MoveTemp(itemsOnBelt[itemIndex]), MoveTemp(ItemIndexToItem[itemID]));
+    if (!result)
+        return false;
 
-void AABeltConveyor::TransferItem(AABeltConveyor* receiver, int64 index) {
-    receiver->ReceiveItem(MoveTemp(itemsOnBelt[index]));
-    itemsOnBelt.RemoveAtSwap(index);
+    itemsOnBelt.RemoveAtSwap(itemIndex);
+    ItemIndexToItem.Remove(itemID);
+
+    return true;
 }

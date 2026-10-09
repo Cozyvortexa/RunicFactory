@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Components/SplineComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "ItemBase.h"
 #include "ItemManager.h"
 #include "ABeltConveyor.generated.h"
 
@@ -28,7 +29,7 @@ public:
 	AABeltConveyor();
 
 	UFUNCTION(BlueprintCallable, Category = "Belt")
-	int64 AddItemOnBelt(UStaticMesh* mesh);
+	bool AddItemOnBelt(const FItemBase& item);
 
 
 	UFUNCTION(BlueprintCallable, Category = "Belt")
@@ -37,11 +38,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Belt")
 	void RemoveItemFromBelt(int32 index);
 
+	UFUNCTION(BlueprintCallable, Category = "Belt")
+	bool GetItemFromBelt(int32 itemIndex, FItemBase& outItem);
+
+	//UFUNCTION(BlueprintCallable, Category = "Belt")
+	//bool GetAndRemoveItemFromBelt(int32 itemIndex, FItemBase& outItem);
+
+	//UFUNCTION(BlueprintCallable, Category = "Belt")
+
 
 	UFUNCTION(BlueprintCallable, Category = "Belt")
-	void TransferItem(AABeltConveyor* receiver, int64 index);
+	bool TransferItem(AABeltConveyor* receiver, int32 itemIndex);
 
-	void ReceiveItem(FBeltItem&& item);
+	bool ReceiveItem(FBeltItem&& beltItem, FItemBase&& item);
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -61,8 +70,12 @@ protected:
 	UItemManager* itemManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int64 itemToAchieveTheEnd;
+	int32 itemIndexToAchieveTheEnd = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxItemNbrOnBelt = 1;
 
 private: 
 	TArray<FBeltItem> itemsOnBelt;
+	TMap<int64, FItemBase> ItemIndexToItem;
 };

@@ -34,7 +34,7 @@ public:
     }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-    FString ItemName;
+    FName ItemName;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
     int32 MaxStackSize;
