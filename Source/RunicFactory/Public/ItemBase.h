@@ -48,3 +48,25 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
     UStaticMesh* mesh;
 };
+
+USTRUCT(BlueprintType)
+struct FInventorySlot
+{
+    GENERATED_BODY()
+
+public:
+    FInventorySlot()
+        : number(0)
+        , isEmpty(true)
+    {
+    }
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    FItemBase item;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    int32 number;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    bool isEmpty;
+};
