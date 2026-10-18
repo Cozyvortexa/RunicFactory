@@ -4,14 +4,15 @@
 #include "Inventory.h"
 
 // Sets default values
-AInventory::AInventory()
+UInventoryComponent::UInventoryComponent()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
+	SetIsReplicatedByDefault(true);
 
 }
 
-void AInventory::RebuildIndex()
+void UInventoryComponent::RebuildIndex()
 {
 	EmptySlots.Reset();
 	itemRegister.Reset();
@@ -36,7 +37,7 @@ void AInventory::RebuildIndex()
 	}
 }
 
-void AInventory::StackAll()
+void UInventoryComponent::StackAll()
 {
 	for (auto& Pair : itemRegister)
 	{
@@ -68,7 +69,7 @@ void AInventory::StackAll()
 	RebuildIndex(); // reconstruit registre + EmptySlots
 }
 
-bool AInventory::RemoveItemAt(int32 index, int32 amount, FInventorySlot& outRemoved)
+bool UInventoryComponent::RemoveItemAt(int32 index, int32 amount, FInventorySlot& outRemoved)
 {
 	if (!inventorySlots.IsValidIndex(index) || inventorySlots[index].isEmpty || amount <= 0)
 		return false;
@@ -84,7 +85,7 @@ bool AInventory::RemoveItemAt(int32 index, int32 amount, FInventorySlot& outRemo
 	return true;
 }
 
-int32 AInventory::TransferSlot(int32 from, AInventory* target, int32 amount)
+int32 UInventoryComponent::TransferSlot(int32 from, UInventoryComponent* target, int32 amount)
 {
 	if (!target || target == this
 		|| !inventorySlots.IsValidIndex(from) || inventorySlots[from].isEmpty)
@@ -105,7 +106,7 @@ int32 AInventory::TransferSlot(int32 from, AInventory* target, int32 amount)
 	return moved;
 }
 
-int32 AInventory::FindOutputSlot(bool bFromEnd) const
+int32 UInventoryComponent::FindOutputSlot(bool bFromEnd) const
 {
 	const int32 num = inventorySlots.Num();
 
@@ -127,14 +128,14 @@ int32 AInventory::FindOutputSlot(bool bFromEnd) const
 }
 
 // Raccourci pour les convoyeurs : prend directement dans le bon slot
-bool AInventory::TakeOutput(int32 amount, FInventorySlot& outRemoved, bool bFromEnd)
+bool UInventoryComponent::TakeOutput(int32 amount, FInventorySlot& outRemoved, bool bFromEnd)
 {
 	const int32 idx = FindOutputSlot(bFromEnd);
 	return idx != INDEX_NONE && RemoveItemAt(idx, amount, outRemoved);
 }
 
 // Vide un slot et met à jour le registre + EmptySlots
-void AInventory::ClearSlotInternal(int32 index)
+void UInventoryComponent::ClearSlotInternal(int32 index)
 {
 	const FName name = inventorySlots[index].item.ItemName;
 
@@ -151,7 +152,7 @@ void AInventory::ClearSlotInternal(int32 index)
 }
 
 // Change la quantité d'un slot NON vide et met à jour l'état partiel/plein
-void AInventory::SetSlotCount(int32 index, int32 newCount)
+void UInventoryComponent::SetSlotCount(int32 index, int32 newCount)
 {
 	if (newCount <= 0)
 	{
@@ -171,7 +172,7 @@ void AInventory::SetSlotCount(int32 index, int32 newCount)
 	}
 }
 
-bool AInventory::MoveSlot(int32 from, int32 to)
+bool UInventoryComponent::MoveSlot(int32 from, int32 to)
 {
 	if (from == to
 		|| !inventorySlots.IsValidIndex(from) || !inventorySlots.IsValidIndex(to)
@@ -215,7 +216,7 @@ bool AInventory::MoveSlot(int32 from, int32 to)
 }
 
 // Place un nouveau stack dans un slot vide déjà réservé via SearchEmptySlot()
-void AInventory::CreateStackInternal(int32 index, const FInventorySlot& proto, int32 count)
+void UInventoryComponent::CreateStackInternal(int32 index, const FInventorySlot& proto, int32 count)
 {
 	FInventorySlot& slot = inventorySlots[index];
 	slot.item = proto.item;
@@ -228,11 +229,7 @@ void AInventory::CreateStackInternal(int32 index, const FInventorySlot& proto, i
 		reg.PartialSlots.Add(index);
 }
 
-// Called when the game starts or when spawned
-void AInventory::BeginPlay()
-{
-	Super::BeginPlay();
-	
+void UInventoryComponent::Init() {
 	const int32 size = FMath::Max(slotNbr, 1);
 
 	inventorySlots.SetNum(size);
@@ -241,14 +238,14 @@ void AInventory::BeginPlay()
 	RebuildIndex();
 }
 
-// Called every frame
-void AInventory::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+// Called when the game starts or when spawned
+void UInventoryComponent::BeginPlay()
+{	
+	Init();
 }
 
 
-int32 AInventory::SearchEmptySlot()
+int32 UInventoryComponent::SearchEmptySlot()
 {
 	if (EmptySlots.Num() == 0)
 		return INDEX_NONE;
@@ -262,7 +259,7 @@ int32 AInventory::SearchEmptySlot()
 // Retourne true si TOUT a été inséré.
 // En cas d'espace insuffisant, ce qui a pu entrer est inséré,
 // et itemSlot.number contient le reste (à garder/rendre par l'appelant).
-bool AInventory::AddItem(UPARAM(ref) FInventorySlot& itemSlot)
+bool UInventoryComponent::AddItem(UPARAM(ref) FInventorySlot& itemSlot)
 {
 	if (itemSlot.number <= 0 || itemSlot.isEmpty || itemSlot.item.MaxStackSize <= 0)
 		return false;

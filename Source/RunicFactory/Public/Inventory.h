@@ -14,17 +14,17 @@ struct FItemIndex
     TArray<int32> PartialSlots;   // le stack non plein (ou -1)
 };
 
-UCLASS()
-class RUNICFACTORY_API AInventory : public AActor
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class UInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AInventory();
+	UInventoryComponent();
 
-    // Called every frame
-    virtual void Tick(float DeltaTime) override;
+    UFUNCTION(BlueprintCallable)
+    void Init();
 
     UFUNCTION(BlueprintCallable)
     const TArray<FInventorySlot>& GetInventorySlots() const { return inventorySlots; }
@@ -41,7 +41,7 @@ public:
     bool RemoveItemAt(int32 index, int32 amount, FInventorySlot& outRemoved);
 
     UFUNCTION(BlueprintCallable)
-    int32 TransferSlot(int32 from, AInventory* target, int32 amount = -1);
+    int32 TransferSlot(int32 from, UInventoryComponent* target, int32 amount = -1);
 
     UFUNCTION(BlueprintCallable)
     int32 FindOutputSlot(bool bFromEnd = false) const;
