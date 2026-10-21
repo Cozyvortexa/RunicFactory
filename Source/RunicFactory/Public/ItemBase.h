@@ -12,7 +12,8 @@ UENUM(BlueprintType)
 enum class E_Item_Type : uint8
 {
     Default,
-    Ressource,
+    Resource,
+    Tool,
     Building
 };
 
@@ -33,20 +34,34 @@ public:
     {
     }
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General")
     FName ItemName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General")
     int32 MaxStackSize;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General")
     TObjectPtr<UTexture2D> Icone;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "General")
     E_Item_Type ItemType;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
     UStaticMesh* mesh;
+    //TSoftObjectPtr<UStaticMesh>
+
+
+    //Conditionnal value
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tool Logic", meta = (EditCondition = "ItemType == E_Item_Type::Tool", EditConditionHides))
+    TSoftClassPtr<AActor> EquipmentActorClass;
+
+    // --- SPECIFIQUE BÂTIMENT ---
+    // Visibles SEULEMENT si ItemType == Building
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Logic", meta = (EditCondition = "ItemType == E_Item_Type::Building", EditConditionHides))
+    TSoftClassPtr<AActor> BuildingActorClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Logic", meta = (EditCondition = "ItemType == E_Item_Type::Building", EditConditionHides))
+    TSoftObjectPtr<UStaticMesh> BuildingHologramMesh;
 };
 
 USTRUCT(BlueprintType)
