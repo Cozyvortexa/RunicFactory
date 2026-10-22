@@ -304,3 +304,14 @@ bool UInventoryComponent::AddItem(UPARAM(ref) FInventorySlot& itemSlot)
 
 	return remaining == 0;
 }
+
+
+FInventorySlot& UInventoryComponent::GetItemAt(int32 index, bool& success) {
+	success = false;
+	if (index > inventorySlots.Num() || inventorySlots[index].isEmpty) {
+		return inventorySlots[0];
+	}
+
+	success = true;
+	return inventorySlots[index];
+}

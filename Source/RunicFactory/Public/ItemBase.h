@@ -55,7 +55,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tool Logic", meta = (EditCondition = "ItemType == E_Item_Type::Tool", EditConditionHides))
     TSoftClassPtr<AActor> EquipmentActorClass;
 
-    // --- SPECIFIQUE BÂTIMENT ---
+    // --- SPECIFIQUE BATIMENT ---
     // Visibles SEULEMENT si ItemType == Building
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Logic", meta = (EditCondition = "ItemType == E_Item_Type::Building", EditConditionHides))
     TSoftClassPtr<AActor> BuildingActorClass;

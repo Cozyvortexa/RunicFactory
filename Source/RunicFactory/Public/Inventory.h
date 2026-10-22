@@ -49,6 +49,9 @@ public:
     UFUNCTION(BlueprintCallable)
     bool TakeOutput(int32 amount, FInventorySlot& outRemoved, bool bFromEnd = false);
 
+    UFUNCTION(BlueprintCallable)
+    FInventorySlot& GetItemAt(int32 index, bool& success);
+
 
 private:
     int SearchEmptySlot();
