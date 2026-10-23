@@ -261,6 +261,10 @@ int32 UInventoryComponent::SearchEmptySlot()
 // et itemSlot.number contient le reste (à garder/rendre par l'appelant).
 bool UInventoryComponent::AddItem(UPARAM(ref) FInventorySlot& itemSlot)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Item slot number: %d"), itemSlot.number);
+	UE_LOG(LogTemp, Warning, TEXT("itemSlot is Empty: %d"), itemSlot.isEmpty);
+	UE_LOG(LogTemp, Warning, TEXT("itemSlot.item.MaxStackSize : %d"), itemSlot.item.MaxStackSize <= 0);
+
 	if (itemSlot.number <= 0 || itemSlot.isEmpty || itemSlot.item.MaxStackSize <= 0)
 		return false;
 
