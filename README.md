@@ -3,4 +3,7 @@
 | Touche          | Action      |
 | --------------- | ----------- |
 | **ZQSD**        | Se déplacer |
-| **Clic gauche** | Interagir   |
+| **Clic gauche** | Utilise l'object sélectionner  |
+| **Clic droit** | Tirer un cable (premier clic pour au premier point, deuxième au point d'arriver)|
+| **Scroll**      | Change l'object sélectionner   |
+| **E**           |    Interagir avec les ùachine |
